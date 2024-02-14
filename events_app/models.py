@@ -1,32 +1,36 @@
 """Create database models to represent tables."""
-from events_app import db
-from sqlalchemy.orm import backref
 
-# TODO: Create a model called `Guest` with the following fields:
-# - id: primary key
-# - name: String column
-# - email: String column
-# - phone: String column
-# - events_attending: relationship to "Event" table with a secondary table
+from events_app import db
+from sqlalchemy.orm import relationship
+from sqlalchemy import Enum
+from enum import Enum
+
+guest_event_table = db.Table('guest_event_table',
+  db.Column('event_id', db.Integer, db.ForeignKey('event.id'), primary_key=True),
+  db.Column('guest_id', db.Integer, db.ForeignKey('guest.id'), primary_key=True)
+)
 
 class Guest(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+  """Model representing a guest in the database."""
+  __tablename__ = 'guest'
+  id = db.Column(db.Integer, primary_key=True)
+  name = db.Column(db.String(100), nullable=False)
+  email = db.Column(db.String(100), unique=True, nullable=False)
+  phone = db.Column(db.String(20), nullable=False)
+  events_attending = relationship('Event', secondary=guest_event_table, back_populates='guests')
 
-# TODO: Create a model called `Event` with the following fields:
-# - id: primary key
-# - title: String column
-# - description: String column
-# - date_and_time: DateTime column
-# - guests: relationship to "Guest" table with a secondary table
-
-# STRETCH CHALLENGE: Add a field `event_type` as an Enum column that denotes the
-# type of event (Party, Study, Networking, etc)
+class EventType(Enum):
+  """Enumeration representing different types of events."""
+  PARTY = "PARTY"
+  STUDY = "STUDY"
+  NETWORKING = "NETWORKING"
 
 class Event(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-
-# TODO: Create a table `guest_event_table` with the following columns:
-# - event_id: Integer column (foreign key)
-# - guest_id: Integer column (foreign key)
-
-guest_event_table = None
+  """Model representing an event in the database."""
+  __tablename__ = 'event'
+  id = db.Column(db.Integer, primary_key=True)
+  title = db.Column(db.String(100), nullable=False)
+  description = db.Column(db.String(500), nullable=False)
+  date_and_time = db.Column(db.DateTime, nullable=False)
+  event_type = db.Column(db.Enum(*[e.value for e in EventType]), nullable=False)
+  guests = relationship('Guest', secondary=guest_event_table, back_populates='events_attending')

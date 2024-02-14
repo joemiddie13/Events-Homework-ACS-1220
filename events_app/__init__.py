@@ -15,3 +15,7 @@ app.register_blueprint(main)
 
 with app.app_context():
     db.create_all()
+
+# with app.app_context():
+#     db.drop_all()  # Be cautious, this will drop all tables
+#     db.create_all()  # Creates tables based on current models
